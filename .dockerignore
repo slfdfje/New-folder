@@ -1,0 +1,37 @@
+# Frontend - not needed for backend
+frontend/
+
+# Git
+.git/
+.github/
+
+# IDE
+.vscode/
+.idea/
+
+# Docs
+*.md
+*.txt
+
+# Large files
+*.pt
+*.mp4
+*.avi
+*.mov
+
+# Dev files
+.env.local
+.env.development
+
+# Nested dockerfiles (use root only)
+backend/Dockerfile
+backend/.dockerignore
+
+# Node modules (will be installed fresh)
+**/node_modules/
+
+# Python cache
+**/__pycache__/
+**/*.pyc
+**/venv/
+**/.venv/
