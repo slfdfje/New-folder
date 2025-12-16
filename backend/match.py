@@ -48,12 +48,23 @@ def load_clip():
         from PIL import Image
 
         device = "cpu"
-        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
-        processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        # Force download to fix corrupted cache
+        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32", force_download=True).to(device)
+        processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32", force_download=True)
         return torch, model, processor, device, Image
-    except ImportError as e:
-        print(f"Import error: {e}", file=sys.stderr)
-        return None
+    except Exception as e:
+        # If force download fails, try without it (might be already cached correctly)
+        try:
+            import torch
+            from transformers import CLIPProcessor, CLIPModel
+            from PIL import Image
+            device = "cpu"
+            model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
+            processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+            return torch, model, processor, device, Image
+        except Exception as e2:
+            print(f"CLIP load error: {e2}", file=sys.stderr)
+            return None
 
 
 def build_embeddings():
