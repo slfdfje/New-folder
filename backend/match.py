@@ -42,7 +42,7 @@ def simple_match():
 
 
 def load_clip():
-    """Load CLIP model with cache clearing on corruption"""
+    """Load CLIP model - always fresh download to avoid cache corruption"""
     try:
         import torch
         from transformers import CLIPProcessor, CLIPModel
@@ -52,37 +52,49 @@ def load_clip():
 
         device = "cpu"
         
-        # Try loading normally first
-        try:
-            model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
-            processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-            print("✓ CLIP loaded from cache", file=sys.stderr)
-            return torch, model, processor, device, Image
-        except Exception as cache_error:
-            print(f"Cache error detected: {cache_error}", file=sys.stderr)
-            
-            # Clear corrupted cache
-            cache_dirs = [
-                os.path.expanduser("~/.cache/huggingface"),
-                "/tmp/.cache/huggingface"
-            ]
-            for cache_dir in cache_dirs:
-                if os.path.exists(cache_dir):
-                    try:
-                        print(f"Clearing {cache_dir}...", file=sys.stderr)
-                        shutil.rmtree(cache_dir)
-                    except:
-                        pass
-            
-            # Force re-download after clearing cache
-            print("Re-downloading CLIP model...", file=sys.stderr)
-            model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32", force_download=True).to(device)
-            processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32", force_download=True)
-            print("✓ CLIP re-downloaded successfully", file=sys.stderr)
-            return torch, model, processor, device, Image
+        # ALWAYS clear cache before loading to prevent corruption
+        cache_dirs = [
+            os.path.expanduser("~/.cache/huggingface/hub"),
+            os.path.expanduser("~/.cache/huggingface/transformers"),
+            "/tmp/.cache/huggingface",
+            "/root/.cache/huggingface"
+        ]
+        
+        print("Clearing all CLIP caches...", file=sys.stderr)
+        for cache_dir in cache_dirs:
+            if os.path.exists(cache_dir):
+                try:
+                    shutil.rmtree(cache_dir)
+                    print(f"✓ Cleared {cache_dir}", file=sys.stderr)
+                except Exception as e:
+                    print(f"Warning: {e}", file=sys.stderr)
+        
+        # Download fresh every time with explicit cache disable
+        print("Downloading CLIP model (fresh copy)...", file=sys.stderr)
+        os.environ['TRANSFORMERS_OFFLINE'] = '0'
+        os.environ['HF_DATASETS_OFFLINE'] = '0'
+        
+        model = CLIPModel.from_pretrained(
+            "openai/clip-vit-base-patch32",
+            cache_dir="/tmp/clip_temp",
+            force_download=True,
+            resume_download=False
+        ).to(device)
+        
+        processor = CLIPProcessor.from_pretrained(
+            "openai/clip-vit-base-patch32",
+            cache_dir="/tmp/clip_temp",
+            force_download=True,
+            resume_download=False
+        )
+        
+        print("✓ CLIP loaded successfully", file=sys.stderr)
+        return torch, model, processor, device, Image
             
     except Exception as e:
-        print(f"CLIP load failed completely: {e}", file=sys.stderr)
+        print(f"CLIP load failed: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
         return None
 
 
