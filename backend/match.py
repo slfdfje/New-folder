@@ -42,29 +42,48 @@ def simple_match():
 
 
 def load_clip():
+    """Load CLIP model with cache clearing on corruption"""
     try:
         import torch
         from transformers import CLIPProcessor, CLIPModel
         from PIL import Image
+        import os
+        import shutil
 
         device = "cpu"
-        # Force download to fix corrupted cache
-        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32", force_download=True).to(device)
-        processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32", force_download=True)
-        return torch, model, processor, device, Image
-    except Exception as e:
-        # If force download fails, try without it (might be already cached correctly)
+        
+        # Try loading normally first
         try:
-            import torch
-            from transformers import CLIPProcessor, CLIPModel
-            from PIL import Image
-            device = "cpu"
             model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
             processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+            print("✓ CLIP loaded from cache", file=sys.stderr)
             return torch, model, processor, device, Image
-        except Exception as e2:
-            print(f"CLIP load error: {e2}", file=sys.stderr)
-            return None
+        except Exception as cache_error:
+            print(f"Cache error detected: {cache_error}", file=sys.stderr)
+            
+            # Clear corrupted cache
+            cache_dirs = [
+                os.path.expanduser("~/.cache/huggingface"),
+                "/tmp/.cache/huggingface"
+            ]
+            for cache_dir in cache_dirs:
+                if os.path.exists(cache_dir):
+                    try:
+                        print(f"Clearing {cache_dir}...", file=sys.stderr)
+                        shutil.rmtree(cache_dir)
+                    except:
+                        pass
+            
+            # Force re-download after clearing cache
+            print("Re-downloading CLIP model...", file=sys.stderr)
+            model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32", force_download=True).to(device)
+            processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32", force_download=True)
+            print("✓ CLIP re-downloaded successfully", file=sys.stderr)
+            return torch, model, processor, device, Image
+            
+    except Exception as e:
+        print(f"CLIP load failed completely: {e}", file=sys.stderr)
+        return None
 
 
 def build_embeddings():
