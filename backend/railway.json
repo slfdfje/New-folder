@@ -5,8 +5,8 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "python3 clear_cache.py && node server.mjs",
-    "healthcheckPath": "/models",
+    "startCommand": "node server.mjs",
+    "healthcheckPath": "/",
     "restartPolicyType": "ON_FAILURE"
   }
 }

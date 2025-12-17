@@ -1,14 +1,15 @@
 [build]
 builder = "dockerfile"
 dockerfilePath = "./Dockerfile"
-watchPatterns = ["backend/**", "Dockerfile"]
+watchPatterns = ["backend/**", "Dockerfile", "railway.toml"]
 
 [deploy]
+startCommand = "node server.mjs"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
-# Force rebuild - v2 no CLIP
+# FORCE REBUILD - December 17 2025 - Pure Node.js v4
 [variables]
-CACHE_BUST = "no-clip-v2"
+CACHE_BUST = "pure-nodejs-v4-dec17"
