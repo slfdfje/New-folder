@@ -1,24 +1,24 @@
-# Use latest Node Alpine image
+# SIMPLIFIED - No AI/CLIP - v3
 FROM node:20-alpine
 
-# Create app directory
 WORKDIR /app
 
-# Copy only package files first to install dependencies
+# Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
+# Install Node dependencies only
 RUN npm install --omit=dev
 
-# Copy remaining backend files
+# Copy backend files
 COPY . .
 
-# Set Environment
+# Create directories
+RUN mkdir -p uploads reference_images
+
 ENV NODE_ENV=production
 ENV PORT=8080
 
-# Expose backend port
 EXPOSE 8080
 
-# Start backend server
-CMD ["npm", "start"]
+# Start server directly
+CMD ["node", "server.mjs"]
