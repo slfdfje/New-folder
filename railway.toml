@@ -1,9 +1,14 @@
 [build]
 builder = "dockerfile"
 dockerfilePath = "./Dockerfile"
+watchPatterns = ["backend/**", "Dockerfile"]
 
 [deploy]
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
+
+# Force rebuild - v2 no CLIP
+[variables]
+CACHE_BUST = "no-clip-v2"

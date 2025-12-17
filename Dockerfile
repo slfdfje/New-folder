@@ -8,9 +8,8 @@ RUN apt-get update && apt-get install -y curl && \
 
 WORKDIR /app
 
-# Install Python dependencies first (for caching)
-RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
-RUN pip install --no-cache-dir transformers pillow boto3
+# Install ONLY basic Python dependencies (NO transformers/torch - causes corruption)
+RUN pip install --no-cache-dir pillow boto3
 
 # Copy and install Node dependencies
 COPY backend/package.json backend/package-lock.json ./
